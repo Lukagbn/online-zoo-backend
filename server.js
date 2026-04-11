@@ -10,7 +10,9 @@ app.use(express.json());
 app.use(cors());
 
 const userRoute = require("./routes/user.js");
+const animalsRoute = require("./routes/animals.js");
 app.use("/users", userRoute);
+app.use("/animals", animalsRoute);
 
 mongoose
   .connect(process.env.MONGO_URI)
