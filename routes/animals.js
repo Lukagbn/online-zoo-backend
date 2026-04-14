@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Animals = require("../models/Animals.js");
 const AnimalDetails = require("../models/AnimalDetails.js");
+const AnimalCams = require("../models/AnimalCameras.js");
 
 router.get("/", async (req, res) => {
   try {
@@ -26,6 +27,22 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+router.get("/cameras/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existingAnimal = await Animals.findById(id);
+    if (!existingAnimal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
+    const animalCam = await AnimalCams.findOne({ animalId: id });
+    if (!animalCam) {
+      return res
+        .status(404)
+        .json({ message: "Camera not found for this animal" });
+    }
+    res.status(200).json({ data: animalCam });
+  } catch (error) {}
 });
 router.post("/:id", async (req, res) => {
   try {
@@ -73,6 +90,27 @@ router.post("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+router.post("/cameras/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    const existingAnimal = await Animals.findById(id);
+    if (!existingAnimal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
+    const existingCamera = await AnimalCams.findOne({ animalId: id });
+    if (existingCamera) {
+      return res.status(400).json({ message: "Animal camera already exists" });
+    }
+    const newCam = new AnimalCams({ animalId: id, text });
+    await newCam.save();
+    res
+      .status(201)
+      .json({ message: "Camera created successfully", data: newCam });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 router.post("/", async (req, res) => {
   try {
     const { name, commonName, description } = req.body;
@@ -95,7 +133,9 @@ router.post("/", async (req, res) => {
     }
     const newAnimal = new Animals({ name, commonName, description });
     await newAnimal.save();
-    res.status(201).json({ message: "Animal description created!" });
+    res
+      .status(201)
+      .json({ message: "Animal description created!", data: newAnimal });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
