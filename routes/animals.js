@@ -42,7 +42,9 @@ router.get("/cameras/:id", async (req, res) => {
         .json({ message: "Camera not found for this animal" });
     }
     res.status(200).json({ data: animalCam });
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 router.post("/:id", async (req, res) => {
   try {
