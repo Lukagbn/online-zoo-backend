@@ -12,18 +12,10 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.get("/:id", async (req, res) => {
+router.get("/cameras", async (req, res) => {
   try {
-    const { id } = req.params;
-    const details = await AnimalDetails.findOne({ animalId: id }).populate(
-      "animalId",
-    );
-    if (!details) {
-      return res
-        .status(404)
-        .json({ message: "Details not found for this animal" });
-    }
-    res.status(200).json(details);
+    const animalCams = await AnimalCams.find();
+    res.status(200).json({ data: animalCams });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -42,6 +34,43 @@ router.get("/cameras/:id", async (req, res) => {
         .json({ message: "Camera not found for this animal" });
     }
     res.status(200).json({ data: animalCam });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const details = await AnimalDetails.findOne({ animalId: id }).populate(
+      "animalId",
+    );
+    if (!details) {
+      return res
+        .status(404)
+        .json({ message: "Details not found for this animal" });
+    }
+    res.status(200).json(details);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.post("/cameras/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    const existingAnimal = await Animals.findById(id);
+    if (!existingAnimal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
+    const existingCamera = await AnimalCams.findOne({ animalId: id });
+    if (existingCamera) {
+      return res.status(400).json({ message: "Animal camera already exists" });
+    }
+    const newCam = new AnimalCams({ animalId: id, text });
+    await newCam.save();
+    res
+      .status(201)
+      .json({ message: "Camera created successfully", data: newCam });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -92,27 +121,6 @@ router.post("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.post("/cameras/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { text } = req.body;
-    const existingAnimal = await Animals.findById(id);
-    if (!existingAnimal) {
-      return res.status(404).json({ message: "Animal not found" });
-    }
-    const existingCamera = await AnimalCams.findOne({ animalId: id });
-    if (existingCamera) {
-      return res.status(400).json({ message: "Animal camera already exists" });
-    }
-    const newCam = new AnimalCams({ animalId: id, text });
-    await newCam.save();
-    res
-      .status(201)
-      .json({ message: "Camera created successfully", data: newCam });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 router.post("/", async (req, res) => {
   try {
     const { name, commonName, description } = req.body;
@@ -138,6 +146,53 @@ router.post("/", async (req, res) => {
     res
       .status(201)
       .json({ message: "Animal description created!", data: newAnimal });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.patch("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const {
+      commonName,
+      description,
+      size,
+      scientificName,
+      diet,
+      habitat,
+      range,
+      latitude,
+      longitude,
+      detailedDescription,
+      video,
+      image,
+    } = req.body;
+    const existingAnimalDetails = await AnimalDetails.findOne({ animalId: id });
+    if (!existingAnimalDetails) {
+      return res.status(400).json({ message: "Animal details not found" });
+    }
+    existingAnimalDetails.commonName =
+      commonName ?? existingAnimalDetails.commonName;
+    existingAnimalDetails.description =
+      description ?? existingAnimalDetails.description;
+    existingAnimalDetails.size = size ?? existingAnimalDetails.size;
+    existingAnimalDetails.scientificName =
+      scientificName ?? existingAnimalDetails.scientificName;
+    existingAnimalDetails.diet = diet ?? existingAnimalDetails.diet;
+    existingAnimalDetails.habitat = habitat ?? existingAnimalDetails.habitat;
+    existingAnimalDetails.range = range ?? existingAnimalDetails.range;
+    existingAnimalDetails.latitude = latitude ?? existingAnimalDetails.latitude;
+    existingAnimalDetails.longitude =
+      longitude ?? existingAnimalDetails.longitude;
+    existingAnimalDetails.detailedDescription =
+      detailedDescription ?? existingAnimalDetails.detailedDescription;
+    existingAnimalDetails.video = video ?? existingAnimalDetails.video;
+    existingAnimalDetails.image = image ?? existingAnimalDetails.image;
+    const updatedDetails = await existingAnimalDetails.save();
+    res.status(200).json({
+      message: "Details updated successfully!",
+      data: updatedDetails,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

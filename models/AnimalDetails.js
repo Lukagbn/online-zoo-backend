@@ -16,10 +16,6 @@ const AnimalDetailsSchema = new mongoose.Schema({
   longitude: { type: String, required: true },
   description: { type: String, required: true },
   detailedDescription: { type: String, required: true },
-  image: {
-    url: { type: String, required: true },
-    alt: { type: String, required: true },
-  },
   video: { type: String, required: true },
 });
 const AnimalDetails = mongoose.model("AnimalDetails", AnimalDetailsSchema);
