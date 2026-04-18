@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const uploadCloud = require("../middleware/cloudinary.js");
 const Animals = require("../models/Animals.js");
 const AnimalDetails = require("../models/AnimalDetails.js");
 const AnimalCams = require("../models/AnimalCameras.js");
@@ -16,24 +17,6 @@ router.get("/cameras", async (req, res) => {
   try {
     const animalCams = await AnimalCams.find();
     res.status(200).json({ data: animalCams });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-router.get("/cameras/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const existingAnimal = await Animals.findById(id);
-    if (!existingAnimal) {
-      return res.status(404).json({ message: "Animal not found" });
-    }
-    const animalCam = await AnimalCams.findOne({ animalId: id });
-    if (!animalCam) {
-      return res
-        .status(404)
-        .json({ message: "Camera not found for this animal" });
-    }
-    res.status(200).json({ data: animalCam });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -75,7 +58,7 @@ router.post("/cameras/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.post("/:id", async (req, res) => {
+router.post("/:id", uploadCloud.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const existingDetails = await AnimalDetails.findOne({ animalId: id });
@@ -99,7 +82,9 @@ router.post("/:id", async (req, res) => {
       longitude,
       description,
       detailedDescription,
+      video,
     } = req.body;
+    const image = req.file?.path;
     const newAnimalDetails = new AnimalDetails({
       animalId: id,
       commonName,
@@ -112,6 +97,8 @@ router.post("/:id", async (req, res) => {
       longitude,
       description,
       detailedDescription,
+      video,
+      image,
     });
     await newAnimalDetails.save();
     res
@@ -150,7 +137,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", uploadCloud.single("image"), async (req, res) => {
   try {
     const id = req.params.id;
     const {
@@ -165,12 +152,12 @@ router.patch("/:id", async (req, res) => {
       longitude,
       detailedDescription,
       video,
-      image,
     } = req.body;
     const existingAnimalDetails = await AnimalDetails.findOne({ animalId: id });
     if (!existingAnimalDetails) {
       return res.status(400).json({ message: "Animal details not found" });
     }
+    const image = req.file?.path ?? existingAnimalDetails.image;
     existingAnimalDetails.commonName =
       commonName ?? existingAnimalDetails.commonName;
     existingAnimalDetails.description =

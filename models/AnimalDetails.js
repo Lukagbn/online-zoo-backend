@@ -17,6 +17,7 @@ const AnimalDetailsSchema = new mongoose.Schema({
   description: { type: String, required: true },
   detailedDescription: { type: String, required: true },
   video: { type: String, required: true },
+  image: { type: String, required: true },
 });
 const AnimalDetails = mongoose.model("AnimalDetails", AnimalDetailsSchema);
 module.exports = AnimalDetails;
