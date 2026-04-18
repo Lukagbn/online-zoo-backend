@@ -21,7 +21,7 @@ router.get("/cameras", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.get("/:id", async (req, res) => {
+router.get("/details/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const details = await AnimalDetails.findOne({ animalId: id }).populate(
@@ -58,7 +58,7 @@ router.post("/cameras/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.post("/:id", uploadCloud.single("image"), async (req, res) => {
+router.post("/details/:id", uploadCloud.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const existingDetails = await AnimalDetails.findOne({ animalId: id });
@@ -137,7 +137,24 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.patch("/:id", uploadCloud.single("image"), async (req, res) => {
+router.patch("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const findAnimal = await Animals.findById(id);
+    if (!findAnimal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
+    const { name, commonName, description } = req.body;
+    findAnimal.name = name ?? findAnimal.name;
+    findAnimal.commonName = commonName ?? findAnimal.commonName;
+    findAnimal.description = description ?? findAnimal.description;
+    const updatedAnimal = await findAnimal.save();
+    res.status(200).json({ data: updatedAnimal });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.patch("/details/:id", uploadCloud.single("image"), async (req, res) => {
   try {
     const id = req.params.id;
     const {
