@@ -201,5 +201,20 @@ router.patch("/details/:id", uploadCloud.single("image"), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedAnimal = await Animals.findByIdAndDelete(id);
+    if (!deletedAnimal) {
+      return res.status(404).json({ message: "Animal not found!" });
+    }
+    await AnimalDetails.findOneAndDelete({ animalId: id });
+    await AnimalCams.findOneAndDelete({ animalId: id });
+    res
+      .status(200)
+      .json({ message: "Animal deleted successfully", data: deletedAnimal });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;
